@@ -1,0 +1,26 @@
+{
+  "name": "solana-airdrop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "airdrop.js",
+  "scripts": {
+    "initToken": "node createMint.js",
+    "airdrop": "node airdrop.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xuan-vy-nguyen/solana-airdrop.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xuan-vy-nguyen/solana-airdrop/issues"
+  },
+  "homepage": "https://github.com/xuan-vy-nguyen/solana-airdrop#readme",
+  "dependencies": {
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.31.0",
+    "csv-parse": "^5.0.4"
+  }
+}
