@@ -103,6 +103,9 @@ dist
 # TernJS port file
 .tern-port
 
-# transfer multi account
-transfer-15-acc/input/*
-transfer-15-acc/json/*
+transfer-js/input/*
+transfer-js/json/*
+
+transfer-many-acc/input/*
+transfer-many-acc/keypair/*
+transfer-many-acc/output/*
