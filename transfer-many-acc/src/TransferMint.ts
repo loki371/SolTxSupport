@@ -20,7 +20,7 @@ async function testPayerOfMintToken() {
     await payer1.setMintToken(mintToken);
     await payer2.setMintToken(mintToken);
 
-    // await payer2.transferToken(receiver.getPublicKey(), 10);
+    await payer2.transferToken(receiver.getPublicKey(), 1);
 }
 
 testPayerOfMintToken();

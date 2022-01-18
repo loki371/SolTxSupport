@@ -121,6 +121,18 @@ export class Account {
         return this.keypair.publicKey;
     }
 
+    async unMint(dest: web3.PublicKey) {
+        if (this.tokenAccount == null || this.mintToken == null)
+            throw Error("\nthis.tokenAccount == null");
+
+        await this.mintToken.closeAccount(
+            this.tokenAccount.address,
+            dest,
+            this.keypair,
+            []
+        );
+    }
+
     static getAccountFromKeypairJson(path: string): Account {
         let rawData = fs.readFileSync(path, { encoding: 'utf8', flag: 'r' });
         let privateKey = JSON.parse(rawData);
