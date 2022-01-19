@@ -1,7 +1,7 @@
-import { USDC, RandomC } from "./mint/Mints";
-import { Account } from "./account/Account";
+import { USDC, RandomC } from "../mint/Mints";
+import { Account } from "../account/Account";
 import * as splToken from "@solana/spl-token";
-import { connection } from "./connection/Connection";
+import { connection } from "../connection/Connection";
 
 let HEAD_PATH = "transfer-many-acc"
 

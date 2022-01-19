@@ -14,15 +14,21 @@ export class Account {
         this.keypair = web3.Keypair.fromSecretKey(secretKey);
         this.mintToken = null;
         this.tokenAccount = null;
-        console.log("Account.constructor: public key = " + this.getPublicKey());
+        // console.log("Account.constructor: public key = " + this.getPublicKey());
     }
 
-    async setMintToken(mintToken: splToken.Token) {
+    async setMintToken(mintToken: splToken.Token): Promise<boolean> {
         this.mintToken = mintToken;
-        this.tokenAccount = await mintToken.getOrCreateAssociatedAccountInfo(
-            this.getPublicKey()
-        );
-        console.log("setMintToken: success");
+
+        try {
+            this.tokenAccount = await mintToken.getOrCreateAssociatedAccountInfo(
+                this.getPublicKey()
+            );
+            return true;
+        } catch (err) {
+            console.log(err);
+            return false;
+        }
     }
 
     async requestAirdrop() {
@@ -36,7 +42,7 @@ export class Account {
 
     async transferSolana(receiverPubkey: web3.PublicKey, amount: number): Promise<string> {
 
-        console.log("-  transferSolana " + amount + " to " + receiverPubkey);
+        // console.log("-  transferSolana " + amount + " to " + receiverPubkey);
 
         let transaction = new web3.Transaction();
 
@@ -57,7 +63,7 @@ export class Account {
             throw Error("\nthis.tokenAccount == null");
         }
 
-        console.log("\n- transfer " + amount + " coin to " + receiverPubkey);
+        // console.log("\n- transfer " + amount + " coin to " + receiverPubkey);
 
         let toTokenAccount = await this.mintToken.getOrCreateAssociatedAccountInfo(
             receiverPubkey
@@ -80,6 +86,36 @@ export class Account {
             connection,
             transaction,
             [this.keypair])
+    }
+    
+    async transferTokenAndReceiverPayFee(receiver: Account, amount: number): Promise<String> {
+        if (this.tokenAccount == null || this.mintToken == null) {
+            throw Error("\nthis.tokenAccount == null");
+        }
+
+        // console.log("\n- transfer " + amount + " coin to " + receiverPubkey);
+
+        let toTokenAccount = await this.mintToken.getOrCreateAssociatedAccountInfo(
+            receiver.getPublicKey() 
+        );
+
+        let transaction = new web3.Transaction()
+            .add(
+                splToken.Token.createTransferInstruction(
+                    splToken.TOKEN_PROGRAM_ID,
+                    this.tokenAccount.address,
+                    toTokenAccount.address,
+                    this.getPublicKey(),
+                    [],
+                    amount
+                )
+            );
+
+        // Sign transaction, broadcast, and confirm
+        return web3.sendAndConfirmTransaction(
+            connection,
+            transaction,
+            [receiver.getKeypair(), this.keypair])
     }
 
     async createNewMintAddress(amountSupply: number): Promise<web3.PublicKey> {
@@ -113,7 +149,7 @@ export class Account {
         return mint.publicKey;
     }
 
-    getKeypair(): web3.Keypair{
+    getKeypair(): web3.Keypair {
         return this.keypair;
     }
 
@@ -136,6 +172,6 @@ export class Account {
     static getAccountFromKeypairJson(path: string): Account {
         let rawData = fs.readFileSync(path, { encoding: 'utf8', flag: 'r' });
         let privateKey = JSON.parse(rawData);
-        return new Account(privateKey); 
+        return new Account(privateKey);
     }
 }
