@@ -4,12 +4,10 @@ import { Account } from "./account/Account";
 import * as splToken from "@solana/spl-token";
 import { connection } from "./connection/Connection";
 import { parse } from "csv-parse";
-import * as web3 from "@solana/web3.js";
 
 
 let accCSVPath = "transfer-many-acc/input/Payback.csv";
 let accountInfoCsv = "transfer-many-acc/output/AccountInfo.csv";
-let transferFeeCsv = "transfer-many-acc/output/TransferFee.csv";
 let transferTokenCsv = "transfer-many-acc/output/TranferToken.csv";
 let unMinTokenCsv = "transfer-many-acc/output/UnMintToken.csv";
 let successCsv = "transfer-many-acc/output/success.csv";
@@ -17,9 +15,7 @@ let successCsv = "transfer-many-acc/output/success.csv";
 
 // let amountTransfer: number = 10 * USDC_unit;
 let amountTransfer: number = 1;
-let feePerTransaction = 0.32;
 
-let payerForMint = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/payerForMint.json");
 let receiverAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/receiverAccount.json");
 
 
@@ -27,7 +23,7 @@ let mintToken = new splToken.Token(
     connection,
     RandomC,
     splToken.TOKEN_PROGRAM_ID,
-    payerForMint.getKeypair()
+    receiverAccount.getKeypair()
 );
 
 
@@ -49,9 +45,6 @@ fs.createReadStream(accCSVPath)
 
         await updatePaybackList();
         console.log("finish update paybackList, payback.size =  " + paybackList.length + "\n");
-
-        // await sendFeeForPayers();
-        // console.log("finish sendFee for payer, payback.size = " + paybackList.length + "\n");
 
         await paybackToken();
         console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
@@ -96,42 +89,6 @@ async function updatePaybackList() {
 function logUpdatePayback(account: Account, res: boolean) {
     fs.writeFileSync(
         accountInfoCsv,
-        transferAccountToCsvRow(account, res), {
-        flag: "a"
-    });
-}
-
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------
-async function sendFeeForPayers() {
-    console.log("* Start: sendFeeForPayer");
-
-    let counter = 0;
-    let size = paybackList.length;
-    let removeAccounts = new Array<Account>();
-    for (let account of paybackList) {
-        console.log((++counter) + "/" + size);
-
-        let updateResult: boolean;
-        try {
-            await receiverAccount.transferSolana(
-                account.getPublicKey(), 
-                feePerTransaction
-            );
-            updateResult = true;
-        } catch (err) {
-            removeAccounts.push(account);
-            updateResult = false;
-        }
-        logSendFeeForPayer(account, updateResult);
-    }
-
-    for (let account of removeAccounts)
-        removeAccountFromPaybackList(account);
-}
-
-function logSendFeeForPayer(account: Account, res: boolean) {
-    fs.writeFileSync(
-        transferFeeCsv,
         transferAccountToCsvRow(account, res), {
         flag: "a"
     });
