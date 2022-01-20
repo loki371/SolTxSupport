@@ -15,8 +15,9 @@
     "create-mint": "npx ts-node transfer-many-acc/src/example/CreateMint.ts",
     "transfer-mint": "npx ts-node transfer-many-acc/src/example/TransferMint.ts",
     "un-mint": "npx ts-node transfer-many-acc/src/example/UnMint.ts",
-    "airdrop" : "npx ts-node transfer-many-acc/src/example/Airdrop.ts",
-    "test-load-acc" : "npx ts-node transfer-many-acc/src/example/LoadAccount.ts",
-    "payback": "rm transfer-many-acc/output/* && npx ts-node transfer-many-acc/src/Payback.ts"
+    "airdrop": "npx ts-node transfer-many-acc/src/example/Airdrop.ts",
+    "test-load-acc": "npx ts-node transfer-many-acc/src/example/LoadAccount.ts",
+    "payback_new": "rm transfer-many-acc/output/* && npx ts-node transfer-many-acc/src/Payback.ts",
+    "payback_again": "rm transfer-many-acc/output_again/* && npx ts-node transfer-many-acc/src/PaybackAgain.ts"
   }
 }

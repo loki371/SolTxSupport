@@ -7,18 +7,19 @@ import { parse } from "csv-parse";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 
-let accCSVPath = "transfer-many-acc/input/Payback_380.csv";
-let accountInfoCsv = "transfer-many-acc/output/AccountInfo.csv";
-let transferTokenCsv = "transfer-many-acc/output/TranferToken.csv";
-let unMinTokenCsv = "transfer-many-acc/output/UnMintToken.csv";
-let successCsv = "transfer-many-acc/output/success.csv";
+let accCSVPath = "transfer-many-acc/input/Payback_20_keypair2.csv";
+// let accCSVPath = "transfer-many-acc/output_keypair2/input.csv";
+let accountInfoCsv = "transfer-many-acc/output_again/AccountInfo.csv";
+let transferTokenCsv = "transfer-many-acc/output_again/TranferToken.csv";
+let unMinTokenCsv = "transfer-many-acc/output_again/UnMintToken.csv";
+let successCsv = "transfer-many-acc/output_again/success.csv";
 
 
 let amountTransfer: number = 10 * USDC_unit;
-let senderAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/sender.json");
 let keypairPath = "transfer-many-acc/keypair/receiver";
 let receiverAccounts = new Array<Account>();
-for (let i = 3; i <= 21; ++i) {
+
+for (let i = 2; i <= 2; ++i) {
     let receiverAccount = getAccountFromKeyPairPath(i);
     receiverAccounts.push(receiverAccount);
     // console.log("receiverAccount " + i + " pubkey = " + receiverAccount.getPublicKey());
@@ -45,9 +46,6 @@ fs.createReadStream(accCSVPath)
 
         console.log();
         console.log("*itemPerCount = " +itemPerCount);
-        
-        let solNeedForReceiver:number = LAMPORTS_PER_SOL / 10 / receiverAccounts.length;
-        console.log("*solNeedForReceiver = " + solNeedForReceiver);
 
         for (let receiverAccount of receiverAccounts) {
             console.log();
@@ -56,8 +54,6 @@ fs.createReadStream(accCSVPath)
             paybackList = new Array<Account>();
            
             console.log("- receiver = " + receiverAccount.getPublicKey());
-
-            await senderAccount.transferSolana(receiverAccount.getPublicKey(), solNeedForReceiver);
 
             let mintToken: splToken.Token = new splToken.Token(
                 connection,
@@ -71,8 +67,8 @@ fs.createReadStream(accCSVPath)
             await updatePaybackList(mintToken, strKeypairs);
             console.log("finish update paybackList, payback.size =  " + paybackList.length + "\n");
 
-            await paybackToken(receiverAccount);
-            console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
+            // await paybackToken(receiverAccount);
+            // console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
 
             await unMintAllPayback(receiverAccount);
             console.log("\nfinish unMint Token, payback.size = " + paybackList.length + "\n");

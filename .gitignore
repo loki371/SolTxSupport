@@ -105,7 +105,12 @@ dist
 
 transfer-js/input/*
 transfer-js/json/*
+transfer-js/keypair_backup/*
+transfer-js/keypair_copy/*
 
 transfer-many-acc/input/*
 transfer-many-acc/keypair/*
+transfer-many-acc/keypair_backup/*
 transfer-many-acc/output/*
+transfer-many-acc/output_again/*
+
