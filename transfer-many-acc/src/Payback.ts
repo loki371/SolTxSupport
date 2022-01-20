@@ -6,22 +6,21 @@ import { connection } from "./connection/Connection";
 import { parse } from "csv-parse";
 
 
-let accCSVPath = "transfer-many-acc/input/Payback.csv";
+let accCSVPath = "transfer-many-acc/input/Payback_1.csv";
 let accountInfoCsv = "transfer-many-acc/output/AccountInfo.csv";
 let transferTokenCsv = "transfer-many-acc/output/TranferToken.csv";
 let unMinTokenCsv = "transfer-many-acc/output/UnMintToken.csv";
 let successCsv = "transfer-many-acc/output/success.csv";
 
 
-// let amountTransfer: number = 10 * USDC_unit;
-let amountTransfer: number = 1;
+let amountTransfer: number = 10 * USDC_unit;
 
-let receiverAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/receiverAccount.json");
-
+let receiverAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/receiver1.json");
+console.log("receiver PublicKey = " + receiverAccount.getPublicKey());
 
 let mintToken = new splToken.Token(
     connection,
-    RandomC,
+    USDC,
     splToken.TOKEN_PROGRAM_ID,
     receiverAccount.getKeypair()
 );
@@ -39,7 +38,7 @@ const parser = parse({
 fs.createReadStream(accCSVPath)
     .pipe(parser)
     .on('data', function (csvrow) {
-        strKeypairs.push(csvrow[0]);
+        strKeypairs.push(csvrow[1]);
     })
     .on('end', async function () {
 
@@ -67,7 +66,7 @@ async function updatePaybackList() {
     for (let strKeypair of strKeypairs) {
         console.log((++counter) + "/" + size);
 
-        let keypair = JSON.parse(strKeypair);
+        let keypair = JSON.parse( "[" + strKeypair + "]" );
         let payer: Account = new Account(keypair);
         let isValid: boolean = await payer.setMintToken(mintToken);
 
