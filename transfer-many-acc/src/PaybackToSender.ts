@@ -1,88 +1,49 @@
+
 import fs from "fs";
 import { USDC, USDC_unit, RandomC } from "./mint/Mints";
 import { Account } from "./account/Account";
 import * as splToken from "@solana/spl-token";
 import { connection } from "./connection/Connection";
 import { parse } from "csv-parse";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 
-let accCSVPath = "transfer-many-acc/input/Payback_380.csv";
-let accountInfoCsv = "transfer-many-acc/output/AccountInfo.csv";
-let transferTokenCsv = "transfer-many-acc/output/TranferToken.csv";
-let unMinTokenCsv = "transfer-many-acc/output/UnMintToken.csv";
-let successCsv = "transfer-many-acc/output/success.csv";
+let accountInfoCsv = "transfer-many-acc/output_total/AccountInfo.csv";
+let transferTokenCsv = "transfer-many-acc/output_total/TranferToken.csv";
+let unMinTokenCsv = "transfer-many-acc/output_total/UnMintToken.csv";
+let successCsv = "transfer-many-acc/output_total/success.csv";
 
 
-let amountTransfer: number = 10 * USDC_unit;
-let senderAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/sender.json");
+let amountTransfer: number = 200 * USDC_unit;
+let receiver = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/sender.json");
 let keypairPath = "transfer-many-acc/keypair/receiver";
-let receiverAccounts = new Array<Account>();
-for (let i = 3; i <= 21; ++i) {
-    let receiverAccount = getAccountFromKeyPairPath(i);
-    receiverAccounts.push(receiverAccount);
-    // console.log("receiverAccount " + i + " pubkey = " + receiverAccount.getPublicKey());
+
+let paybackList: Array<Account> = new Array();
+for (let i = 2; i <= 21; ++i) {
+    let payer = getAccountFromKeyPairPath(i);
+    paybackList.push(payer);
 }
 
-let stringKeys: Array<string> = new Array();
-let paybackList: Array<Account>;
+async function run() {
+    console.log("- receiver = " + receiver.getPublicKey());
 
-const parser = parse({
-    delimiter: ',',
-    skip_empty_lines: true
-});
+    let mintToken: splToken.Token = new splToken.Token(
+        connection,
+        USDC,
+        splToken.TOKEN_PROGRAM_ID,
+        receiver.getKeypair()
+    );
+    receiver.setMintToken(mintToken);
 
+    await paybackToken(receiver);
+    console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
 
-fs.createReadStream(accCSVPath)
-    .pipe(parser)
-    .on('data', function (csvrow) {
-        stringKeys.push(csvrow[1]);
-    })
-    .on('end', async function () {
+    await unMintAllPayback(receiver);
+    console.log("\nfinish unMint Token, payback.size = " + paybackList.length + "\n");
 
-        let counter = 0;
-        let itemPerCount = stringKeys.length / receiverAccounts.length;
+    updateSuccessCsv();
 
-        console.log();
-        console.log("*itemPerCount = " +itemPerCount);
-        
-        let solNeedForReceiver:number = LAMPORTS_PER_SOL / 10 / receiverAccounts.length;
-        console.log("*solNeedForReceiver = " + solNeedForReceiver);
-
-        for (let receiverAccount of receiverAccounts) {
-            console.log();
-            console.log("** Process Batch with Counter = " + counter + " / " + stringKeys.length);
-
-            paybackList = new Array<Account>();
-           
-            console.log("- receiver = " + receiverAccount.getPublicKey());
-
-            await senderAccount.transferSolana(receiverAccount.getPublicKey(), solNeedForReceiver);
-
-            let mintToken: splToken.Token = new splToken.Token(
-                connection,
-                USDC,
-                splToken.TOKEN_PROGRAM_ID,
-                receiverAccount.getKeypair()
-            );
-            await receiverAccount.setMintToken(mintToken);
-            
-            let strKeypairs = stringKeys.slice(counter, counter + itemPerCount);
-
-            await updatePaybackList(mintToken, strKeypairs);
-            console.log("finish update paybackList, payback.size =  " + paybackList.length + "\n");
-
-            await paybackToken(receiverAccount);
-            console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
-
-            await unMintAllPayback(receiverAccount);
-            console.log("\nfinish unMint Token, payback.size = " + paybackList.length + "\n");
-
-            updateSuccessCsv();
-
-            counter += itemPerCount;
-        }
-    });
+}
+run();
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,7 +102,7 @@ async function paybackToken(receiverAccount: Account) {
             await account.transferTokenAndReceiverPayFee(receiverAccount, amountTransfer);
             updateResult = true;
         } catch (err) {
-            console.log(err); 
+            console.log(err);
             removeAccounts.push(account);
             updateResult = false;
         }
@@ -207,7 +168,7 @@ function removeAccountFromPaybackList(account: Account) {
 
 
 function transferAccountToCsvRow(account: Account, res: boolean): string {
-    return account.getPublicKey() 
+    return account.getPublicKey()
         + ",\""
         + account.getKeypair().secretKey.toString()
         + "\"\n";

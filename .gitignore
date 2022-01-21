@@ -113,4 +113,5 @@ transfer-many-acc/keypair/*
 transfer-many-acc/keypair_backup/*
 transfer-many-acc/output/*
 transfer-many-acc/output_again/*
+transfer-many-acc/output_*/**
 
