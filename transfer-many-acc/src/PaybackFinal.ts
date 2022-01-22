@@ -1,3 +1,4 @@
+
 import fs from "fs";
 import { USDC, USDC_unit, RandomC } from "./mint/Mints";
 import { Account } from "./account/Account";
@@ -6,139 +7,47 @@ import { connection } from "./connection/Connection";
 import { parse } from "csv-parse";
 
 
-let accCSVPath = "transfer-many-acc/input/PaybackUnMint_again.csv";
-let accountInfoCsv = "transfer-many-acc/output_final/AccountInfo.csv";
-let transferTokenCsv = "transfer-many-acc/output_final/TranferToken.csv";
-let unMinTokenCsv = "transfer-many-acc/output_final/UnMintToken.csv";
-let successCsv = "transfer-many-acc/output_final/success.csv";
+let transferTokenCsv = "transfer-many-acc/output_total/TranferToken.csv";
+let unMinTokenCsv = "transfer-many-acc/output_total/UnMintToken.csv";
+let successCsv = "transfer-many-acc/output_total/success.csv";
 
 
-let amountTransfer: number = 10 * USDC_unit;
+let amountTransfer: number = 200 * USDC_unit;
+let receiver = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/sender.json");
 let keypairPath = "transfer-many-acc/keypair/receiver";
-let receiverAccounts = new Array<Account>();
 
-let zeroSolAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/zeroSol.json");
-let receiverAccount = getAccountFromKeyPairPath(21);
-for (let i = 0; i < 19; ++i) {
-    receiverAccounts.push(receiverAccount);
+let paybackList: Array<Account> = new Array();
+for (let i = 1; i <= 21; ++i) {
+    let payer = getAccountFromKeyPairPath(i);
+    paybackList.push(payer);
 }
 
-let stringKeys: Array<string> = new Array();
-let paybackList: Array<Account>;
+async function run() {
+    console.log("- receiver = " + receiver.getPublicKey());
 
+    let mintToken: splToken.Token = new splToken.Token(
+        connection,
+        USDC,
+        splToken.TOKEN_PROGRAM_ID,
+        receiver.getKeypair()
+    );
 
-const parser = parse({
-    delimiter: ',',
-    skip_empty_lines: true
-});
+    receiver.setMintToken(mintToken);
+    for (let payer of paybackList) 
+        payer.setMintToken(mintToken);
 
+    // await paybackToken(receiver);
+    // console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
 
-fs.createReadStream(accCSVPath)
-    .pipe(parser)
-    .on('data', function (csvrow) {
-        stringKeys.push(csvrow[1]);
-    })
-    .on('end', async function () {
+    await unMintAllPayback(receiver);
+    console.log("\nfinish unMint Token, payback.size = " + paybackList.length + "\n");
 
-        let counter = 0;
-        let itemPerCount = stringKeys.length / receiverAccounts.length;
-
-        console.log();
-        console.log("*itemPerCount = " + itemPerCount);
-
-        for (let receiverAccount of receiverAccounts) {
-            console.log();
-            console.log("** Process Batch with Counter = " + counter + " / " + stringKeys.length);
-
-            paybackList = new Array<Account>();
-
-            console.log("- receiver = " + receiverAccount.getPublicKey());
-
-            // deny create new AssociateTokenAccount
-            let mintToken: splToken.Token = new splToken.Token(
-                connection,
-                USDC,
-                splToken.TOKEN_PROGRAM_ID,
-                zeroSolAccount.getKeypair()
-            );
-            await receiverAccount.setMintToken(mintToken);
-
-            // int all account with mint
-            let strKeypairs = stringKeys.slice(counter, counter + itemPerCount);
-            await initPaybackListAndSetZeroMint(mintToken, strKeypairs);
-            console.log("finish update paybackList, payback.size =  " + paybackList.length + "\n");
-
-            // payback all token
-            // await paybackToken(receiverAccount);
-            // console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
-           
-            // set payer for remove account
-            mintToken = new splToken.Token(
-                connection,
-                USDC,
-                splToken.TOKEN_PROGRAM_ID,
-                receiverAccount.getKeypair()
-            );
-            await receiverAccount.setMintToken(mintToken);
-            await setMintTokenPaybackList(mintToken);
-
-            // unmint all account
-            await unMintAllPayback(receiverAccount);
-            console.log("\nfinish unMint Token, payback.size = " + paybackList.length + "\n");
-
-            updateSuccessCsv();
-
-            counter += itemPerCount;
-        }
-    });
-
-
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------
-async function initPaybackListAndSetZeroMint(mintToken: splToken.Token, strKeypairs: Array<string>) {
-    console.log("* Start: updatePaybackList");
-
-    let counter = 0;
-    let size = strKeypairs.length;
-
-    let removeAccounts = new Array<Account>();
-    for (let strKeypair of strKeypairs) {
-        console.log((++counter) + "/" + size);
-
-        let keypair = JSON.parse("[" + strKeypair + "]");
-        let payer: Account = new Account(keypair);
-        let isValid: boolean = await payer.setMintToken(mintToken);
-
-        if (isValid) {
-            paybackList.push(payer);
-        } else {
-            removeAccounts.push(payer);
-            logErrorUpdatePayback(payer);
-        }
-    }
-
-    for (let account of removeAccounts)
-        removeAccountFromPaybackList(account);
+    updateSuccessCsv();
 }
 
-function logErrorUpdatePayback(account: Account) {
-    fs.writeFileSync(
-        accountInfoCsv,
-        transferAccountToCsvRow(account), {
-        flag: "a"
-    });
-}
+run();
 
-async function setMintTokenPaybackList(mintToken: splToken.Token) {
-    console.log("* Start: updatePaybackList");
 
-    let counter = 0;
-    let size = paybackList.length;
-
-    for (let payer of paybackList) {
-        console.log((++counter) + "/" + size);
-        await payer.setMintToken(mintToken);
-    }
-}
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------
 async function paybackToken(receiverAccount: Account) {
     console.log("* Start: paybackToken");
