@@ -4,30 +4,28 @@ import { Account } from "./account/Account";
 import * as splToken from "@solana/spl-token";
 import { connection } from "./connection/Connection";
 import { parse } from "csv-parse";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 
-let accCSVPath = "transfer-many-acc/input/Payback_100_keypair17.csv";
-let accountInfoCsv = "transfer-many-acc/output/AccountInfo.csv";
-let transferTokenCsv = "transfer-many-acc/output/TranferToken.csv";
-let unMinTokenCsv = "transfer-many-acc/output/UnMintToken.csv";
-let successCsv = "transfer-many-acc/output/success.csv";
+let accCSVPath = "transfer-many-acc/input/PaybackUnMint_again.csv";
+let accountInfoCsv = "transfer-many-acc/output_final/AccountInfo.csv";
+let transferTokenCsv = "transfer-many-acc/output_final/TranferToken.csv";
+let unMinTokenCsv = "transfer-many-acc/output_final/UnMintToken.csv";
+let successCsv = "transfer-many-acc/output_final/success.csv";
 
 
 let amountTransfer: number = 10 * USDC_unit;
-let zeroSolAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/zeroSol.json");
+let keypairPath = "transfer-many-acc/keypair/receiver";
+let receiverAccounts = new Array<Account>();
 
-let keypairPath = "transfer-many-acc/keypair/";
-let receiverAccounts: Array<Account> = [
-    Account.getAccountFromKeypairJson(keypairPath + "sender.json")
-];
+let zeroSolAccount = Account.getAccountFromKeypairJson("transfer-many-acc/keypair/zeroSol.json");
+let receiverAccount = getAccountFromKeyPairPath(21);
+for (let i = 0; i < 19; ++i) {
+    receiverAccounts.push(receiverAccount);
+}
 
 let stringKeys: Array<string> = new Array();
-let paybackList: Array<Account> = new Array();
-for (let i = 1; i <= 21; ++i) {
-    let payer = getAccountFromKeyPairPath(i);
-    paybackList.push(payer);
-}
+let paybackList: Array<Account>;
+
 
 const parser = parse({
     delimiter: ',',
@@ -56,8 +54,26 @@ fs.createReadStream(accCSVPath)
 
             console.log("- receiver = " + receiverAccount.getPublicKey());
 
+            // deny create new AssociateTokenAccount
+            let mintToken: splToken.Token = new splToken.Token(
+                connection,
+                USDC,
+                splToken.TOKEN_PROGRAM_ID,
+                zeroSolAccount.getKeypair()
+            );
+            await receiverAccount.setMintToken(mintToken);
+
+            // int all account with mint
+            let strKeypairs = stringKeys.slice(counter, counter + itemPerCount);
+            await initPaybackListAndSetZeroMint(mintToken, strKeypairs);
+            console.log("finish update paybackList, payback.size =  " + paybackList.length + "\n");
+
+            // payback all token
+            // await paybackToken(receiverAccount);
+            // console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
+           
             // set payer for remove account
-            let mintToken = new splToken.Token(
+            mintToken = new splToken.Token(
                 connection,
                 USDC,
                 splToken.TOKEN_PROGRAM_ID,
