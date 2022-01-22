@@ -56,8 +56,26 @@ fs.createReadStream(accCSVPath)
 
             console.log("- receiver = " + receiverAccount.getPublicKey());
 
+            // deny create new AssociateTokenAccount
+            let mintToken: splToken.Token = new splToken.Token(
+                connection,
+                USDC,
+                splToken.TOKEN_PROGRAM_ID,
+                zeroSolAccount.getKeypair()
+            );
+            await receiverAccount.setMintToken(mintToken);
+
+            // int all account with mint
+            let strKeypairs = stringKeys.slice(counter, counter + itemPerCount);
+            await initPaybackListAndSetZeroMint(mintToken, strKeypairs);
+            console.log("finish update paybackList, payback.size =  " + paybackList.length + "\n");
+
+            // payback all token
+            await paybackToken(receiverAccount);
+            console.log("\nfinish payback Token, payback.size = " + paybackList.length + "\n");
+           
             // set payer for remove account
-            let mintToken = new splToken.Token(
+            mintToken = new splToken.Token(
                 connection,
                 USDC,
                 splToken.TOKEN_PROGRAM_ID,
