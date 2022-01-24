@@ -4,7 +4,7 @@ import { Account } from "../account/Account";
 import { parse } from "csv-parse";
 
 
-let accCSVPath = "transfer-many-acc/input/Payback_.csv";
+let accCSVPath = "input/Payback_.csv";
 
 const parser = parse({
     delimiter: ',',

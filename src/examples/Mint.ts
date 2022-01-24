@@ -3,11 +3,9 @@ import { Account } from "../account/Account";
 import * as splToken from "@solana/spl-token";
 import { connection } from "../connection/Connection";
 
-let HEAD_PATH = "transfer-many-acc"
-
-let payer: Account = Account.getAccountFromKeypairJson(HEAD_PATH + "/keypair/1.json");
-let canceler: Account = Account.getAccountFromKeypairJson(HEAD_PATH + "/keypair/4.json");
-let receiver: Account = Account.getAccountFromKeypairJson(HEAD_PATH + "/keypair/5.json"); 
+let payer: Account = Account.getAccountFromKeypairJson("keypair/1.json");
+let canceler: Account = Account.getAccountFromKeypairJson("keypair/4.json");
+let receiver: Account = Account.getAccountFromKeypairJson("keypair/5.json"); 
 
 let mintToken = new splToken.Token(
     connection,

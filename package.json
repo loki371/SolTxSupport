@@ -12,13 +12,13 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build clean",
-    "create-mint": "npx ts-node transfer-many-acc/src/example/CreateMint.ts",
-    "transfer-mint": "npx ts-node transfer-many-acc/src/example/TransferMint.ts",
-    "un-mint": "npx ts-node transfer-many-acc/src/example/UnMint.ts",
-    "airdrop": "npx ts-node transfer-many-acc/src/example/Airdrop.ts",
-    "test-load-acc": "npx ts-node transfer-many-acc/src/example/LoadAccount.ts",
-    "payback_new": "rm transfer-many-acc/output/* && npx ts-node transfer-many-acc/src/Payback.ts",
-    "payback_again": "rm transfer-many-acc/output_again/* && npx ts-node transfer-many-acc/src/PaybackAgain.ts",
-    "payback_final": "rm transfer-many-acc/output_final/* && npx ts-node transfer-many-acc/src/PaybackFinal.ts"
+
+    "create-mint": "npx ts-node src/examples/CreateMint.ts",
+    "transfer-mint": "npx ts-node src/examples/TransferMint.ts",
+    "un-mint": "npx ts-node src/examples/UnMint.ts",
+    "airdrop": "npx ts-node src/examples/Airdrop.ts",
+    "load-acc": "npx ts-node src/examples/LoadAccount.ts",
+
+    "payback": "rm output/* && npx ts-node src/Payback.ts"
   }
 }
